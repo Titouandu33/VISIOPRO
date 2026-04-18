@@ -1,0 +1,13 @@
+# ─── Configuration Railway ────────────────────────────────────────────────────
+# Documentation : https://docs.railway.app/reference/config-as-code
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "node server.js"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Railway détecte automatiquement Node.js via package.json
+# La variable DATABASE_URL est injectée automatiquement par le plugin PostgreSQL Railway
