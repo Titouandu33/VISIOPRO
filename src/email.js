@@ -2,11 +2,12 @@
 const nodemailer = require('nodemailer');
 const twilio     = require('twilio');
 
-// Client Twilio (pour SMS d'invitation)
-const clientTwilio = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// Client Twilio — initialisé à la demande pour éviter le crash au démarrage
+function getTwilioClient() {
+  const sid = process.env.TWILIO_ACCOUNT_SID || '';
+  if (!sid.startsWith('AC')) return null;
+  return twilio(sid, process.env.TWILIO_AUTH_TOKEN);
+}
 
 // Configurer le transporteur SMTP
 // Supporte Gmail (SMTP_HOST=smtp.gmail.com) ou n'importe quel autre serveur SMTP.
@@ -28,8 +29,8 @@ const templateInvitation = ({ nomInterviewe, nomJournaliste, lienRejoindre }) =>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invitation hà une visioconférence</title>
-  </head>
+  <title>Invitation à une visioconférence</title>
+</head>
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:40px 20px;">
     <tr><td align="center">
@@ -113,6 +114,8 @@ const email = {
       ? messagePersonnalise.trim()
       : `Bonjour ${nomInterviewe}, ${nomJournaliste} vous invite à une visioconférence. Rejoignez ici : ${lienRejoindre}`;
 
+    const clientTwilio = getTwilioClient();
+    if (!clientTwilio) throw new Error('Twilio non configuré — vérifiez TWILIO_ACCOUNT_SID (doit commencer par AC)');
     await clientTwilio.messages.create({
       body: corps,
       from: process.env.TWILIO_PHONE_NUMBER,
